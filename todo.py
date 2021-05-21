@@ -20,6 +20,9 @@ todo = api.model('Todo', {
     'Status': fields.String(required=True, description="Current status of task")
 })
 
+todo_status=api.model('Todo_status',{
+    'Status': fields.String(required=True,description="Current Status of task")
+})
 
 class TodoDAO(object):
     def __init__(self):
@@ -66,8 +69,9 @@ class TodoDAO(object):
 
     def updateStatus(self, id, stat):
         myc1=mydb.cursor()
+        status=stat['Status']
         query="UPDATE todoList set Status=%s where id="+str(id)
-        val=(stat,)
+        val=(status,)
         myc1.execute(query,val)
         mydb.commit()
         myc2=mydb.cursor()
@@ -86,10 +90,14 @@ class TodoDAO(object):
         val=(task,)
         myc1.execute(query,val)
         mydb.commit()
-        todo={}
-        todo['task']=task
-        todo['id']=id
-        return todo
+        myc2=mydb.cursor()
+        query="SELECT * FROM todoList WHERE id="+str(id)
+        myc2.execute(query)
+        todo_id=myc2.fetchall()
+        todo_dict={}
+        for row in todo_id:
+            todo_dict["id"],todo_dict["task"],todo_dict['due by'],todo_dict['Status']=row[0],row[1],row[2],row[3]
+            return todo_dict
 
     def delete(self, id):
         myc1=mydb.cursor()
@@ -145,7 +153,17 @@ class Todo(Resource):
         '''Update a task given its identifier'''
         return DAO.update(id, api.payload)
 
-    
+
+
+@ns.route('/status/<int:id>')
+@ns.response(404,'Todo Not Found')    
+@ns.param('id','The task identifier')
+class TodoStatus(Resource):
+    '''to change the status of the resource'''
+    @ns.expect(todo_status)
+    @ns.marshal_with(todo_status)
+    def put(self,id):
+        return DAO.updateStatus(id,api.payload)
 
 if __name__ == '__main__':
     app.run(debug=True)
