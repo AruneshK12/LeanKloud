@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask,request
 from flask_restplus import Api, Resource, fields
 from werkzeug.middleware.proxy_fix import ProxyFix
 import mysql.connector
@@ -105,6 +105,46 @@ class TodoDAO(object):
         myc1.execute(query)
         mydb.commit()
 
+    def tasksTobeFinished(self,data):
+        myc1=mydb.cursor()
+        due_date=data
+        query="select * from todoList where DueBy>="+due_date+" and Status!=\"Finished\""
+        myc1.execute(query)
+        todo_query=myc1.fetchall()
+        todo_dict=[]
+        for row in todo_query:
+            temp={}
+            temp["id"],temp["task"],temp['due by'],temp['Status']=str(row[0]),str(row[1]),str(row[2]),str(row[3])
+            todo_dict.append(temp)
+        return todo_dict
+    
+    def overdueTasks(self):
+        myc2=mydb.cursor()
+        query="select * from todoList where DueBy<(select curdate()) and Status!=\"Finished\""
+        myc2.execute(query)
+        todo_query=myc2.fetchall()
+        todo_dict=[]
+        for row in todo_query:
+            temp={}
+            temp["id"],temp["task"],temp['due by'],temp['Status']=str(row[0]),str(row[1]),str(row[2]),str(row[3])
+            todo_dict.append(temp)
+        if(todo_dict==[]):
+            return ["EMPTY"]
+        return todo_dict
+    
+    def finished(self):
+        myc2=mydb.cursor()
+        query="select * from todoList where Status=\"Finished\""
+        myc2.execute(query)
+        todo_query=myc2.fetchall()
+        todo_dict=[]
+        for row in todo_query:
+            temp={}
+            temp["id"],temp["task"],temp['due by'],temp['Status']=str(row[0]),str(row[1]),str(row[2]),str(row[3])
+            todo_dict.append(temp)
+        if(todo_dict==[]):
+            return ["EMPTY"]
+        return todo_dict
 
 DAO = TodoDAO()
 #DAO.create({'task': 'Build an API'})
@@ -163,7 +203,33 @@ class TodoStatus(Resource):
     @ns.expect(todo_status)
     @ns.marshal_with(todo_status)
     def put(self,id):
+        '''using PUT to change the status of the resource'''
         return DAO.updateStatus(id,api.payload)
+
+@ns.route('/due')
+@ns.response(404,'Todo Not Found')
+class TodoDueDate(Resource):
+    '''to check due tasks'''
+    def get(self):
+        '''enter Due date in YYYY-MM-DD format to get current due tasks'''
+        due_date=request.args.get("due_date")
+        return DAO.tasksTobeFinished(due_date)
+
+@ns.route('/overdue')
+@ns.response(404,'Todo Task not found')
+class todoOverDue(Resource):
+    '''to get overdue tasks'''
+    def get(self):
+        '''to get the overdue tasks in the todoList'''
+        return DAO.overdueTasks()
+
+@ns.route('/finished')
+@ns.response(404,'Todo Task not found')
+class todoFinished(Resource):
+    '''to get the finished tasks'''
+    def get(self):
+        '''GET request to get all finished tasks'''
+        return DAO.finished()
 
 if __name__ == '__main__':
     app.run(debug=True)
