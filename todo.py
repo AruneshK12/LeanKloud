@@ -15,7 +15,9 @@ ns = api.namespace('todos', description='TODO operations')
 
 todo = api.model('Todo', {
     'id': fields.Integer(readonly=True, description='The task unique identifier'),
-    'task': fields.String(required=True, description='The task details')
+    'task': fields.String(required=True, description='The task details'),
+    'due by': fields.String(required=True, description='The due date of task in YYYY-MM-DD format'),
+    'Status': fields.String(required=True, description="Current status of task")
 })
 
 
@@ -30,7 +32,7 @@ class TodoDAO(object):
         todo_list=[]
         for row in all_todos:
             temp={}
-            temp['id'],temp['task']=row[0],row[1]
+            temp['id'],temp['task'],temp['due by'],temp['Status']=row[0],row[1],row[2],row[3]
             todo_list.append(temp)
         return todo_list
     def get(self, id):
@@ -40,21 +42,42 @@ class TodoDAO(object):
         todo_id=myc2.fetchall()
         todo_dict={}
         for row in todo_id:
-            todo_dict["id"],todo_dict["task"]=row[0],row[1]
+            todo_dict["id"],todo_dict["task"],todo_dict['due by'],todo_dict['Status']=row[0],row[1],row[2],row[3]
             return todo_dict
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
+        myc2=mydb.cursor()
+        myc2.execute("SELECT COUNT(*) FROM todoList")
+        todo_id=myc2.fetchall()
+        counter=todo_id[0][0]
         todo = data
         task=data['task']
+        dueBy=data['due by']
+        status=data['Status']
         myc1=mydb.cursor()
-        query="INSERT INTO todoList(task) values (%s)"
-        val=(task,)
+        query="INSERT INTO todoList(task,Dueby,Status) values (%s,%s,%s)"
+        val=(task,dueBy,status)
         myc1.execute(query,val)
         mydb.commit()
-        todo['id'] = self.counter = self.counter + 1
-        self.todos.append(todo)
+        todo['id'] = counter + 1
+        #self.todos.append(todo)
         return todo
+
+    def updateStatus(self, id, stat):
+        myc1=mydb.cursor()
+        query="UPDATE todoList set Status=%s where id="+str(id)
+        val=(stat,)
+        myc1.execute(query,val)
+        mydb.commit()
+        myc2=mydb.cursor()
+        query="SELECT * FROM todoList WHERE id="+str(id)
+        myc2.execute(query)
+        todo_id=myc2.fetchall()
+        todo_dict={}
+        for row in todo_id:
+            todo_dict["id"],todo_dict["task"],todo_dict['due by'],todo_dict['Status']=row[0],row[1],row[2],row[3]
+            return todo_dict
 
     def update(self, id, data):
         task=data['task']
@@ -122,6 +145,7 @@ class Todo(Resource):
         '''Update a task given its identifier'''
         return DAO.update(id, api.payload)
 
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
