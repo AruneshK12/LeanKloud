@@ -1,6 +1,7 @@
 from flask import Flask,request
 from flask_restplus import Api, Resource, fields
-from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.contrib.fixers import ProxyFix
+from werkzeug.utils import cached_property
 from functools import wraps
 import mysql.connector
 
