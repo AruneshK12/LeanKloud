@@ -76,6 +76,9 @@ todo_status=api.model('Todo_status',{
     'Status': fields.String(required=True,description="Current Status of task")
 })
 
+todo_task=api.model('Todo_Task',{
+    'task': fields.String(required=True,description="The task details")
+})
 class TodoDAO(object):
     def __init__(self):
         self.counter = 0
@@ -160,7 +163,7 @@ class TodoDAO(object):
     def tasksTobeFinished(self,data):
         myc1=mydb.cursor()
         due_date=data
-        query="select * from todoList where DueBy>="+due_date+" and Status!=\"Finished\""
+        query="select * from todoList where DueBy<="+due_date+" and Status!=\"Finished\""
         myc1.execute(query)
         todo_query=myc1.fetchall()
         todo_dict=[]
@@ -245,7 +248,7 @@ class Todo(Resource):
 
     @ns.doc('Update_todo',security="AccessKey")
     @token_required_write
-    @ns.expect(todo)
+    @ns.expect(todo_task)
     @ns.marshal_with(todo)
     def put(self, id):
         '''Update a task given its identifier'''
