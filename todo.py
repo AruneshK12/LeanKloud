@@ -163,7 +163,7 @@ class TodoDAO(object):
     def tasksTobeFinished(self,data):
         myc1=mydb.cursor()
         due_date=data
-        query="select * from todoList where DueBy<="+due_date+" and Status!=\"Finished\""
+        query="select * from todoList where DueBy="+due_date+" and Status!=\"Finished\""
         myc1.execute(query)
         todo_query=myc1.fetchall()
         todo_dict=[]
