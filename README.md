@@ -1,7 +1,7 @@
 # LeanKloud
 Python Programming Test - LeanKloud for Arunesh Kumar
 
-## Part1
+## Part - 1
   In this Part - 1 we have created an Flask-RESTful API task List manager, the basic code used is found in [todoMVC](https://flask-restplus.readthedocs.io/en/stable/example.html). In this API the following functionalities are present:-  
 > 1. Ability to add, view, delete and update tasks  
 > 2. Ability to check the due tasks based on the given due date  
@@ -59,3 +59,8 @@ functools
   ```
   mydb=mysql.connector.connect(host="<Database Host Name>",username="<MYSQL Username>",password="<MYSQL Password>",database="<database where the tables are created>")
   ```
+
+## Part - 2
+  The complexity of the topper_calc.py is O(n).  
+  The screenshots of the output is as follows: -  
+  ![image](https://user-images.githubusercontent.com/34567890/119223322-61d5ac80-bb16-11eb-952e-f66870bcced4.png)
